@@ -9,18 +9,18 @@ from aiogram.enums import ParseMode
 import coc
 
 import config
-import coclayer
-import reghandlers
+from client import client
+from register_handlers import register_handlers
 
 
+bot = Bot(token=config.TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
-reghandlers.register_handlers(dp)
+register_handlers(dp)
 
 
 async def main() -> None:
     try:
-        await coclayer.login(config.EMAIL, config.PASSWORD)
-        bot = Bot(token=config.TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+        await client.login(config.EMAIL, config.PASSWORD)
         await dp.start_polling(bot)
 
     except coc.InvalidCredentials as error:
@@ -31,9 +31,14 @@ async def main() -> None:
         logging.info("Bot is shutting down...")
         
     finally:
-        await coclayer.close()
+        await client.close()
+        
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-    asyncio.run(main())
+
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass

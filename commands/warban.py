@@ -4,7 +4,7 @@ from aiogram.types import *
 from aiogram import Router
 
 import config
-import coclayer
+from client import client
 import warban as wb
 
 from datetime import datetime
@@ -22,7 +22,7 @@ async def warban_list(message: Message) -> None:
         if await wb.get_datetime(tag) < datetime.now():
             passed.append(tag)
             continue
-        player = await coclayer.coc_client.get_player(tag)
+        player = await client.get_player(tag)
         time_diff = await wb.get_datetime(tag) - datetime.now()
         time_str = str(round(time_diff.total_seconds() / 3600 + 0.5)) + " год"
         if time_diff.total_seconds() < 3600:
@@ -57,7 +57,7 @@ async def warban(args: list, message: Message) -> None:
             continue
 
         try:
-            clan = await coclayer.coc_client.get_clan(config.CLAN_TAG)
+            clan = await client.get_clan(config.CLAN_TAG)
             player = clan.get_member(tag)
             if player is None:
                 string += f"Гравця {tag} не знайдено\n"

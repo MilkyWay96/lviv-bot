@@ -3,8 +3,7 @@ from aiogram.filters import *
 from aiogram.types import *
 from aiogram import Router
 
-
-router = Router()
+import chats
 
 
 keyboard = InlineKeyboardMarkup(
@@ -15,6 +14,20 @@ keyboard = InlineKeyboardMarkup(
 )
 
 
+router = Router()
+
+
+async def start(message: Message) -> None:
+    await chats.add(message.chat.id)
+    await message.answer(f"Привіт, {html.bold(message.from_user.full_name)}! Я бот-організатор клану LVIV, оберіть опцію знизу щоб продовжити:", reply_markup=keyboard)
+
+
 @router.message(Command("почати"))
 async def handler(message: Message) -> None:
-    await message.answer(f"Привіт, {html.bold(message.from_user.full_name)}! Я бот-організатор клану LVIV, оберіть опцію знизу щоб продовжити:", reply_markup=keyboard)
+    await start(message)
+
+
+@router.callback_query(lambda c: c.data == "start")
+async def callback_start_button(callback_query: CallbackQuery) -> None:
+    await callback_query.answer()
+    await start(callback_query.message)

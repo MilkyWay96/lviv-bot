@@ -14,12 +14,16 @@ instructions = f"""
 router = Router()
 
 
+async def help(message: Message) -> None:
+    await message.answer(instructions)
+
+
 @router.callback_query(lambda c: c.data == "tell_instructions")
-async def process_callback_button_click(callback_query: CallbackQuery) -> None:
+async def callback_help_button(callback_query: CallbackQuery) -> None:
     await callback_query.answer()
-    await callback_query.message.answer(instructions)
+    await help(callback_query.message)
 
 
 @router.message(Command("інструкція"))
-async def command_start_handler(message: Message) -> None:
-    await message.answer(instructions)
+async def handler(message: Message) -> None:
+    await help(message)
