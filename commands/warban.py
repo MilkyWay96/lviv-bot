@@ -4,6 +4,8 @@ from aiogram.types import *
 from aiogram import Router
 
 import config
+import coc
+import Levenshtein
 from client import client
 import warban as wb
 
@@ -15,7 +17,7 @@ router = Router()
 
 async def warban_list(message: Message) -> None:
     players = await wb.load_data()
-    answer = ""
+    answer = "Список ВП:\n"
     passed = []
 
     for tag in players:
@@ -45,11 +47,28 @@ async def clear_warban_list(message: Message) -> None:
     await message.answer("Список ВП очищено")
 
 
+async def get_member(string: str, max_distance: int) -> coc.ClanMember:
+    closest = None
+    clan = await client.get_clan(config.CLAN_TAG)
+    if string[0] == "#":
+        return clan.get_member(string)
+    else:
+        names = []
+        min_distance = max_distance + 1
+        for member in clan.members:
+            distance = Levenshtein.distance(string, member.name)
+            if distance <= max_distance and distance < min_distance:
+                closest = member
+                min_distance = distance
+
+        return closest
+
+
 async def warban(args: list, message: Message) -> None:
-    string = "Список ВП:\n"
+    answer = ""
         
     for i in range(0, len(args), 2):
-        tag = args[i]
+        string = args[i]
         try:
             add_time = int(args[i+1])
         except (ValueError, IndexError):
@@ -57,17 +76,18 @@ async def warban(args: list, message: Message) -> None:
             continue
 
         try:
-            clan = await client.get_clan(config.CLAN_TAG)
-            player = clan.get_member(tag)
-            if player is None:
-                string += f"Гравця {tag} не знайдено\n"
-                continue
-
-            await wb.add_time(tag, add_time)
-            string += f"Додано {str(add_time)} год гравцю \"{player.name}\"\n"
+            member = await get_member(string, round(len(string) / 2))
         except Exception as e:
             await message.answer(f"Сталась непередбачувана помилка: {str(e)}")
-    await message.answer(string)
+
+        if member is None:
+            answer += f"Гравця {string} не знайдено\n"
+            continue
+
+        await wb.add_time(member.tag, add_time)
+        answer += f"Додано {str(add_time)} год гравцю \"{member.name}\"\n"
+        
+    await message.answer(answer)
 
 
 @router.message(Command("вп"))
