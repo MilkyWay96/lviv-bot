@@ -1,0 +1,6 @@
+aiogram
+coc.py
+requests
+python-dotenv
+aiofiles
+Levenshtein
